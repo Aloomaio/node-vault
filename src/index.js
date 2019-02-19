@@ -4,7 +4,7 @@ let debug = require('debug')('node-vault');
 let tv4 = require('tv4');
 let commands = require('./commands.js');
 let mustache = require('mustache');
-let rp = require('request-promise-native');
+let axios = require('axios');
 
 class VaultError extends Error {}
 
@@ -24,12 +24,6 @@ module.exports = (config = {}) => {
   tv4 = config.tv4 || tv4;
   commands = config.commands || commands;
   mustache = config.mustache || mustache;
-  rp = (config['request-promise'] || rp).defaults({
-    json: true,
-    resolveWithFullResponse: true,
-    simple: false,
-    strictSSL: !process.env.VAULT_SKIP_VERIFY,
-  });
   const client = {};
 
   function handleVaultResponse(response) {
@@ -84,10 +78,10 @@ module.exports = (config = {}) => {
     if (typeof client.token === 'string' && client.token.length) {
       options.headers['X-Vault-Token'] = options.headers['X-Vault-Token'] || client.token;
     }
-    options.uri = uri;
+    options.url = uri;
     debug(options.method, uri);
     if (options.json) debug(options.json);
-    return rp(options).then(client.handleVaultResponse);
+    return axios(options).then(client.handleVaultResponse);
   };
 
   client.help = (path, requestOptions) => {
